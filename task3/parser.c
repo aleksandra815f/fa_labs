@@ -33,11 +33,11 @@ Status params_count(const Flag flag, int *count)
     }
 
     switch (flag) {
-        case FLAG_Q: *count = 4; return STATUS_OK; 
-        case FLAG_M: *count = 2; return STATUS_OK;  
-        case FLAG_T: *count = 4; return STATUS_OK;  
+        case FLAG_Q: *count = 4; return STATUS_OK;
+        case FLAG_M: *count = 2; return STATUS_OK;
+        case FLAG_T: *count = 4; return STATUS_OK;
     }
-    return STATUS_BAD_FLAG;  
+    return STATUS_BAD_FLAG;
 }
 
 Status parse_double(const char *text, double *number)
@@ -54,10 +54,14 @@ Status parse_double(const char *text, double *number)
     double value = strtod(text, &end);
 
     if (end == text || *end != '\0') {
-        return STATUS_BAD_NUMBER;  
-    }
-    if (!isfinite(value)) {
         return STATUS_BAD_NUMBER;
+    }
+
+    if (isnan(value)) {
+        return STATUS_BAD_NUMBER;
+    }
+    if (isinf(value)) {
+        return STATUS_OVERFLOW;
     }
 
     *number = value;

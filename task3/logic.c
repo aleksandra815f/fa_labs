@@ -2,7 +2,7 @@
 
 #include <math.h>
 #include <stddef.h>
- 
+
 static bool is_close(const double x, const double y, const double eps)
 {
     return fabs(x - y) <= eps;
@@ -40,7 +40,6 @@ Status make_permutations(const double a, const double b, const double c,
         candidate.b = values[order[i][1]];
         candidate.c = values[order[i][2]];
 
-        /* сравниваем кандидата со всеми уже найденными перестановками */
         bool duplicate = false;
         for (int j = 0; j < found; j++) {
             if (is_close(candidate.a, result[j].a, eps)
@@ -60,7 +59,7 @@ Status make_permutations(const double a, const double b, const double c,
     *count = found;
     return STATUS_OK;
 }
-//решаем уравнение
+
 Status solve_quadratic(const double a, const double b, const double c,
                        const double eps,
                        SolutionKind *kind, double *x1, double *x2)
@@ -75,7 +74,6 @@ Status solve_quadratic(const double a, const double b, const double c,
         return STATUS_BAD_EPS;
     }
 
-    /* если для ответа корни не нужны, в них лежат нули */
     *x1 = 0.0;
     *x2 = 0.0;
     if (fabs(a) <= eps) {
@@ -102,7 +100,7 @@ Status solve_quadratic(const double a, const double b, const double c,
         return STATUS_OVERFLOW;
     }
 
-    if (fabs(discriminant) <= eps) {              
+    if (fabs(discriminant) <= eps) {
         const double root = -b / (2.0 * a);
         if (!isfinite(root)) {
             return STATUS_OVERFLOW;
@@ -129,7 +127,7 @@ Status solve_quadratic(const double a, const double b, const double c,
     *x2 = root2;
     return STATUS_OK;
 }
-//кратность
+
 Status is_multiple(const long long first, const long long second, bool *result)
 {
     if (result == NULL) {
@@ -139,7 +137,6 @@ Status is_multiple(const long long first, const long long second, bool *result)
         return STATUS_ZERO;
     }
 
-    // LLONG_MIN % -1 в Си приводит к неопределённости
     if (second == 1 || second == -1) {
         *result = true;
         return STATUS_OK;
@@ -148,7 +145,7 @@ Status is_multiple(const long long first, const long long second, bool *result)
     *result = (first % second == 0);
     return STATUS_OK;
 }
-//прямоуг треугольник
+
 Status is_right_triangle(const double a, const double b, const double c,
                          const double eps, bool *result)
 {
@@ -172,9 +169,15 @@ Status is_right_triangle(const double a, const double b, const double c,
         return STATUS_OVERFLOW;
     }
 
-    // т Пиф
-    *result = is_close(a2 + b2, c2, eps)
-           || is_close(a2 + c2, b2, eps)
-           || is_close(b2 + c2, a2, eps);
+    const double sum_ab = a2 + b2;
+    const double sum_ac = a2 + c2;
+    const double sum_bc = b2 + c2;
+    if (!isfinite(sum_ab) || !isfinite(sum_ac) || !isfinite(sum_bc)) {
+        return STATUS_OVERFLOW;
+    }
+
+    *result = is_close(sum_ab, c2, eps)
+           || is_close(sum_ac, b2, eps)
+           || is_close(sum_bc, a2, eps);
     return STATUS_OK;
 }
