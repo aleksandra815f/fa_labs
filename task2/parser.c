@@ -18,9 +18,13 @@ Status parse_double(const char *text, double *number){
         return STATUS_BAD_NUMBER;
     }
 
-    if (!isfinite(value)) {
+    if (isnan(value)) {
         return STATUS_BAD_NUMBER;
     }
+    if (isinf(value)) {
+        return STATUS_BAD_NUMBER;
+    }
+
     *number = value;
     return STATUS_OK;
 }

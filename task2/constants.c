@@ -9,6 +9,7 @@ typedef double (*Function)(double x);
 #define MAX_TERMS 100000000L    // максимум слагаемых для медленных рядов
 #define MAX_PI_LIMIT 20000000L   // максимум n для предела числа pi
 #define MAX_GAMMA_M 36     // максимум m для предела числа gamma
+#define GAMMA_LIMIT_MIN_EPS 1e-6  // точнее этого gamma_limit не даёт
 #define MAX_GAMMA_GROUP 10000L // максимум групп j для ряда числа gamma
 #define MAX_PRIME_LIMIT 16777216L // 2^24, граница решета для gamma
 #define MAX_BISECTION_STEPS 200  // максимум шагов метода дихотомии
@@ -61,7 +62,7 @@ Status e_limit(const double eps, double *result){
     }
 
     double n = 1.0;
-    double previous = 2.0;  /* (1 + 1/1)^1 */
+    double previous = 2.0;
     for (int step = 1; step <= MAX_DOUBLINGS; step++) {
         n = n * 2.0;
         double current = pow(1.0 + 1.0 / n, n);
@@ -81,12 +82,12 @@ Status e_series(const double eps, double *result)
         return status;
     }
 
-    double sum = 1.0;  //первое слагаемое 1/0!
-    double term = 1.0; //теукущее
+    double sum = 1.0;
+    double term = 1.0;
     for (long n = 1; n <= 100; n++) {
-        term = term / (double)n;     /* теперь term = 1/n! */
+        term = term / (double)n;
         sum = sum + term;
-        if (term < eps) {            /* остаток ряда меньше последнего слагаемого */
+        if (term < eps) {
             *result = sum;
             return STATUS_OK;
         }
@@ -147,8 +148,6 @@ Status pi_series(const double eps, double *result){
     return STATUS_NOT_CONVERGED;
 }
 
-/* cos x = -1 касается нуля, но не меняет знак (cos x + 1 >= 0 всегда),
-   поэтому для дихотомии берём sin x = 0: на отрезке [3, 4] у него тот же корень pi */
 static double pi_function(double x)
 {
     return sin(x);
@@ -171,7 +170,7 @@ Status ln2_limit(const double eps, double *result)
     }
 
     double n = 1.0;
-    double previous = 1.0;                   // 1 * (2^1 - 1) 
+    double previous = 1.0;
     for (int step = 1; step <= MAX_DOUBLINGS; step++) {
         n = n * 2.0;
         double current = n * (pow(2.0, 1.0 / n) - 1.0);
@@ -246,7 +245,7 @@ Status sqrt2_product(const double eps, double *result)
     }
 
     double product = 1.0;
-    double power = 0.25;                    
+    double power = 0.25;
     for (int k = 2; k <= 60; k++) {
         double next = product * pow(2.0, power);
         if (2.0 * fabs(next - product) < eps) {
@@ -273,8 +272,6 @@ Status sqrt2_equation(const double eps, double *result)
     return bisection(sqrt2_function, 1.0, 2.0, eps, result);
 }
 
-
-
 Status gamma_limit(const double eps, double *result)
 {
     Status status = check_args(eps, result);
@@ -282,15 +279,21 @@ Status gamma_limit(const double eps, double *result)
         return status;
     }
 
+    // биномиальные коэффициенты при m=36 дают катастрофическое
+    // сокращение порядка 1e-6, точнее этот метод не даёт
+    if (eps < GAMMA_LIMIT_MIN_EPS) {
+        return STATUS_NOT_CONVERGED;
+    }
+
     double previous = 0.0;
     for (int m = 1; m <= MAX_GAMMA_M; m++) {
         double sum = 0.0;
-        double binom = 1.0;       // C(m, 0)
-        double log_fact = 0.0;    // ln(0!) 
+        double binom = 1.0;
+        double log_fact = 0.0;
 
         for (int k = 1; k <= m; k++) {
-            binom = binom * (double)(m - k + 1) / (double)k;   /* C(m,k) из C(m,k-1) */
-            log_fact = log_fact + log((double)k);              /* ln(k!) из ln((k-1)!) */
+            binom = binom * (double)(m - k + 1) / (double)k;
+            log_fact = log_fact + log((double)k);
             double term = binom * log_fact / (double)k;
             if (k % 2 == 1) {
                 sum = sum - term;
@@ -342,7 +345,6 @@ Status gamma_equation(const double eps, double *result)
         return status;
     }
 
-    /* is_composite[i] == 1 значит "число i составное". calloc заполняет память нулями */
     char *is_composite = calloc((size_t)MAX_PRIME_LIMIT + 1, sizeof(char));
     if (is_composite == NULL) {
         return STATUS_NO_MEMORY;
@@ -353,9 +355,9 @@ Status gamma_equation(const double eps, double *result)
     long next_check = 1024;
 
     for (long i = 2; i <= MAX_PRIME_LIMIT; i++) {
-        if (is_composite[i] == 0) {                  /* i - простое */
+        if (is_composite[i] == 0) {
             product = product * ((double)i - 1.0) / (double)i;
-            if (i <= MAX_PRIME_LIMIT / i) {          /* i * i не выйдет за границу */
+            if (i <= MAX_PRIME_LIMIT / i) {
                 for (long j = i * i; j <= MAX_PRIME_LIMIT; j += i) {
                     is_composite[j] = 1;
                 }
