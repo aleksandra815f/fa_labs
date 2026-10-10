@@ -1,0 +1,1 @@
+-nd tests/input1.txt tests/input1.txt

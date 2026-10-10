@@ -1,0 +1,1 @@
+-s tests/input6.txt
