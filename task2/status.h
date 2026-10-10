@@ -1,0 +1,15 @@
+#ifndef STATUS_H
+#define STATUS_H
+
+typedef enum {
+    STATUS_OK,
+    STATUS_NULL,
+    STATUS_BAD_ARGC, 
+    STATUS_BAD_NUMBER, 
+    STATUS_BAD_EPS,
+    STATUS_BAD_INTERVAL,
+    STATUS_NOT_CONVERGED,
+    STATUS_NO_MEMORY
+} Status;
+
+#endif
