@@ -1,0 +1,7 @@
+A (B (E (G, T, R (W, Z)), F (L, M)), C)
+A
+root(child)
+A(B,C,D,E)
+  X ( Y ,Z )  
+кот(лапа, хвост(кончик))
+A(K(B,C,D,E),         f(B,C,D,E))
